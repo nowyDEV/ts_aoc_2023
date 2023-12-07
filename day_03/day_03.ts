@@ -1,19 +1,10 @@
 import input from "./input.txt";
 
-// const input = `467..114..
-// ...*......
-// ..35..633.
-// ......#...
-// 617*......
-// .....+.58.
-// ..592.....
-// ......755.
-// ...$.*....
-// .664.598..`;
-
 const data = input.split(/\r?\n/).map((line) => line.split(""));
 
-let sum = 0;
+let partsSum = 0;
+const gears: Record<string, { adjacentParts: number; value: number }> = {};
+
 for (let y = 0; y < data.length; y++) {
   const row = data[y];
   let part = {
@@ -33,7 +24,7 @@ for (let y = 0; y < data.length; y++) {
       part.value = part.value.concat(row[x]);
     } else if (part.value !== "") {
       if (isValidPart(part)) {
-        sum += parseInt(part.value);
+        partsSum += parseInt(part.value);
       }
 
       resetPart();
@@ -41,7 +32,7 @@ for (let y = 0; y < data.length; y++) {
 
     if (x === row.length - 1 && part.value !== "") {
       if (isValidPart(part)) {
-        sum += parseInt(part.value);
+        partsSum += parseInt(part.value);
       }
 
       resetPart();
@@ -73,7 +64,21 @@ function isValidPart(part: Part) {
 
   for (let y = yCoords.start; y <= yCoords.end; y++) {
     for (let x = xCoords.start; x <= xCoords.end; x++) {
-      if (symbols.test(data[y][x])) {
+      const cell = data[y][x];
+
+      if (symbols.test(cell)) {
+        if (cell === "*") {
+          if (gears[`${y}-${x}`] !== undefined) {
+            gears[`${y}-${x}`].adjacentParts += 1;
+            gears[`${y}-${x}`].value *= parseInt(part.value);
+          } else {
+            gears[`${y}-${x}`] = {
+              adjacentParts: 1,
+              value: parseInt(part.value),
+            };
+          }
+        }
+
         return true;
       }
     }
@@ -82,4 +87,9 @@ function isValidPart(part: Part) {
   return false;
 }
 
-console.log({ sum });
+const gearSum = Object.values(gears)
+  .filter((gear) => gear.adjacentParts === 2)
+  .reduce((acc, gear) => acc + gear.value, 0);
+
+console.log("part1", partsSum);
+console.log("part2", gearSum);
