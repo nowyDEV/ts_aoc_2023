@@ -1,16 +1,5 @@
 import input from "./input.txt";
 
-// const input = `LR
-
-// 11A = (11B, XXX)
-// 11B = (XXX, 11Z)
-// 11Z = (11B, XXX)
-// 22A = (22B, XXX)
-// 22B = (22C, 22C)
-// 22C = (22Z, 22Z)
-// 22Z = (22B, 22B)
-// XXX = (XXX, XXX)`;
-
 const [directions, , ...network] = input.split(/\r?\n/);
 
 const networkMap: Record<string, { L: string; R: string }> = {};
@@ -38,29 +27,48 @@ function findDestination(startPoint: string, numOfMoves = 0) {
   return findDestination(currentPoint, moves);
 }
 
-// console.log("part1", findDestination(start));
+console.log("part1", findDestination(start));
 
 const startNodes = Object.keys(networkMap).filter((key) => key.endsWith("A"));
 const isDestinationNode = (node: string) => node.endsWith("Z");
+const dirLength = directions.length;
 
-function findConcurrentDestinations(startPoints: string[], numOfMoves = 0) {
-  console.log({ startPoints });
-  let moves = numOfMoves;
-  let currentPoints = startPoints;
+function logAllDestinations(node: string, moves: number = 0) {
+  let currentNode = node;
+  let currentMoves = moves;
 
   for (const move of directions.split("") as ("L" | "R")[]) {
-    let nextPoints = [];
+    currentMoves += 1;
+    currentNode = networkMap[currentNode][move];
 
-    for (const point of currentPoints) {
-      nextPoints.push(networkMap[point][move]);
-    }
-    currentPoints = nextPoints;
-    moves += 1;
-
-    if (currentPoints.every(isDestinationNode)) {
-      return moves;
+    if (
+      isDestinationNode(currentNode) &&
+      (currentMoves - moves) % dirLength === 0
+    ) {
+      return currentMoves;
     }
   }
 
-  return findConcurrentDestinations(currentPoints, moves);
+  return logAllDestinations(currentNode, currentMoves);
+}
+console.log(
+  "part2",
+  leastCommonMultiple(startNodes.map((node) => logAllDestinations(node)))
+);
+
+function leastCommonMultiple(numbers: number[]) {
+  function gcd(a: number, b: number): number {
+    return !b ? a : gcd(b, a % b);
+  }
+
+  function lcm(a: number, b: number) {
+    return (a * b) / gcd(a, b);
+  }
+
+  let multiple = numbers.sort().at(0) ?? -1;
+  numbers.forEach(function (n) {
+    multiple = lcm(multiple, n);
+  });
+
+  return multiple;
 }
